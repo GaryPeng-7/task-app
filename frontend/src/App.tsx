@@ -1,7 +1,28 @@
+import { useState } from "react";
+import { useAuthStore } from "./stores/authStore";
+import LoginPage from "./features/auth/LoginPage";
+import RegisterPage from "./features/auth/RegisterPage";
+
 export default function App() {
+  const token = useAuthStore((s) => s.token);
+  const [showRegister, setShowRegister] = useState(false);
+
+  if (!token) {
+    return showRegister ? (
+      <RegisterPage onSwitch={() => setShowRegister(false)} />
+    ) : (
+      <LoginPage onSwitch={() => setShowRegister(true)} />
+    );
+  }
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex items-center justify-center">
-      <h1 className="text-3xl font-bold">Task app — Tailwind online</h1>
+    <div className="p-8">
+      <p>Logged in!</p>
+      <button
+        onClick={() => useAuthStore.getState().logout()}
+        className="bg-slate-700 px-3 py-1 rounded"
+      >
+        Log out
+      </button>
     </div>
   );
 }
