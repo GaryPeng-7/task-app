@@ -13,3 +13,21 @@ export interface Block {
 export function getBlocks(date: string) {
   return api<Block[]>(`/api/blocks?date=${date}`);
 }
+
+export async function reorderBlocks(date: string, orderIds: string[]) {
+  return api<void>(`/api/blocks/reorder`, {
+    method: "PATCH",
+    body: JSON.stringify({ blockDate: date, orderIds }),
+  });
+}
+
+export function createBlock(date: string, subject: string) {
+  return api<Block>(`/api/blocks`, {
+    method: "POST",
+    body: JSON.stringify({ blockDate: date, subject }),
+  });
+}
+
+export function deleteBlcok(id: string) {
+  return api<void>(`/api/blocks/${id}`, { method: "DELETE" });
+}
