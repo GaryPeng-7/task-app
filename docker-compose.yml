@@ -3,8 +3,8 @@ services:
     image: postgres:16
     container_name: week1-postgres
     environment:
-      POSTGRES_USER: appuser
-      POSTGRES_PASSWORD: apppassword
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: appdb
     ports:
       - "5432:5432"
