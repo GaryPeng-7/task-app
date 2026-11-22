@@ -29,9 +29,9 @@ class TimerService(
         // 1. Load block via findByIdAndUserId(blockId, userId) -> 404 if null
         val block = taskBlockRepository.findByIdAndUserId(blockId, userId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Block not found")
-        // 2. Load timer via timerRepository.findById(blockId) -> 404 if missing
-        val timer = timerRepository.findById(blockId).orElseThrow{
-            ResponseStatusException(HttpStatus.NOT_FOUND, "Timer not found")
+        // 2. Load timer — or create a fresh IDLE row if this block never had one
+        val timer = timerRepository.findById(blockId).orElseGet {
+            timerRepository.save(Timer(block = block))
         }
         // 3. Expiry first: CheckExpiry on the snapshot; if Applied -> apply(timer, block, expired)
         val expired = TimerStateMachine.transition(
@@ -60,8 +60,9 @@ class TimerService(
         // 1. Same two loads + 404s (ownership check included)
         val block = taskBlockRepository.findByIdAndUserId(blockId, userId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Block not found")
-        val timer = timerRepository.findById(blockId).orElseThrow{
-            ResponseStatusException(HttpStatus.NOT_FOUND, "Timer not found")
+
+        val timer = timerRepository.findById(blockId).orElseGet {
+            timerRepository.save(Timer(block = block))
         }
         // 2. Run CheckExpiry only — there is no user intent on a read
         val expired = TimerStateMachine.transition(
