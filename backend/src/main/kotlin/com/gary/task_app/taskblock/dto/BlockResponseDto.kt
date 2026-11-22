@@ -10,6 +10,6 @@ data class BlockResponseDto(
     val description: String?,
     val blockDate: LocalDate,
     val position: Int,
-    val remainingSeconds: Int?,
+    //val remainingSeconds: Int?,
     val status: BlockStatus
 )

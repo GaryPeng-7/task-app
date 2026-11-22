@@ -1,8 +1,8 @@
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/appdb
-    username: appuser
-    password: apppassword
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: validate
@@ -14,7 +14,7 @@ spring:
         format_sql: true # pretty-prints that SQL with indentation instead of one 300-character line.
 
 jwt:
-  secret: adDBuG0+ZO76bhErTFMPTbC3AaGekXtTEHehKkIVvYaED2FNEDk8W25WpXtWRqc9 # a long random string ? at least 256 bits (32+ chars). Generate one: openssl rand -base64 48
+  secret: ${JWT_SECRET} # a long random string ? at least 256 bits (32+ chars). Generate one: openssl rand -base64 48
   expiration-ms: 3600000   # 1 hour
 
 logging:

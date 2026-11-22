@@ -17,13 +17,16 @@ OncePerRequestFilter(){
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
+        // extract
         val header = request.getHeader("Authorization")
         if (header == null || !header.startsWith("Bearer ")) {
             filterChain.doFilter(request, response) // no token -> let SecurityConfig decide
             return
         }
         try {
+            // validate
             val email = jwtService.extractEmail((header.removePrefix("Bearer ")))
+            // register
             val auth = UsernamePasswordAuthenticationToken(email, null, emptyList())
             SecurityContextHolder.getContext().authentication = auth
         } catch (ex: JwtException) {

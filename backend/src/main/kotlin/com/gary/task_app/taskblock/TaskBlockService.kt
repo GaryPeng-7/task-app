@@ -47,7 +47,7 @@ class TaskBlockService(
         request.subject?.let {block.subject = it}
         request.description?.let {block.description = it}
         request.status?.let {block.status = it}
-        request.remainingSeconds?.let { block.remainingSeconds = it }
+        //request.remainingSeconds?.let { block.remainingSeconds = it }
 
         return taskBlockRepository.save(block).toDto()
     }

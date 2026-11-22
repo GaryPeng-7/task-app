@@ -1,9 +1,7 @@
 package com.gary.task_app.config
 
 import com.gary.task_app.auth.JwtAuthFilter
-import com.gary.task_app.auth.JwtService
 import jakarta.servlet.DispatcherType
-import org.springframework.cglib.proxy.Dispatcher
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpStatus
@@ -32,6 +30,8 @@ class SecurityConfig(
                 it.dispatcherTypeMatchers(DispatcherType.ERROR)
                     .permitAll()
                     .requestMatchers("/api/auth/**").permitAll()
+                    .requestMatchers("/","/index.html","/app.js","/main.css").permitAll()
+                    .requestMatchers("/ws/**").permitAll()
                     .anyRequest().authenticated()
             }
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)

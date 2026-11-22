@@ -29,6 +29,7 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("tools.jackson.module:jackson-module-kotlin")
 	implementation("io.jsonwebtoken:jjwt-api:0.12.6")
+	implementation("org.springframework.boot:spring-boot-starter-websocket")
 	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
 	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
 	runtimeOnly("org.postgresql:postgresql")
@@ -38,6 +39,9 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-validation-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+	testImplementation("org.springframework.boot:spring-boot-testcontainers")
+	testImplementation("org.testcontainers:testcontainers-junit-jupiter")
+	testImplementation("org.testcontainers:testcontainers-postgresql")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

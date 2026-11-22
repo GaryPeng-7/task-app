@@ -36,8 +36,8 @@ class TaskBlock(
     @Column(nullable = false)
     var position: Int,
 
-    @Column(name = "remaining_seconds")
-    var remainingSeconds: Int? = null,
+    //@Column(name = "remaining_seconds")
+    //var remainingSeconds: Int? = null,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -56,5 +56,7 @@ class TaskBlock(
     var updatedAt: Instant = Instant.now()
     ) {
     fun toDto() = BlockResponseDto(id = id, subject = subject, description = description,
-        blockDate = blockDate, position = position, remainingSeconds = remainingSeconds, status = status)
+        blockDate = blockDate, position = position,
+        //remainingSeconds = remainingSeconds,
+        status = status)
 }
