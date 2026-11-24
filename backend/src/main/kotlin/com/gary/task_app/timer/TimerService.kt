@@ -5,6 +5,7 @@ import com.gary.task_app.taskblock.TaskBlock
 import com.gary.task_app.taskblock.TaskBlockRepository
 import com.gary.task_app.timer.dto.TimerStateResponse
 import org.springframework.http.HttpStatus
+import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
@@ -16,7 +17,8 @@ import java.util.UUID
 class TimerService(
     private val taskBlockRepository: TaskBlockRepository,
     private val timerRepository: TimerRepository,
-    private val clock: Clock
+    private val clock: Clock,
+    private val messagingTemplate: SimpMessagingTemplate,
 ) {
 
     fun start(blockId: UUID, userId: UUID)      = handleIntent(blockId, userId, TimerIntent.Start)
@@ -37,7 +39,7 @@ class TimerService(
         val expired = TimerStateMachine.transition(
             timer.toSnapshot(), TimerIntent.CheckExpiry, clock.instant()
         )
-        if (expired is Applied) apply(timer, block, expired)
+        if (expired is Applied) apply(timer, block, expired, userId)
         // 4. Rebuild the snapshot, run transition(snapshot, intent, clock.instant())
         val result = TimerStateMachine.transition(
             timer.toSnapshot(), intent, clock.instant()
@@ -48,7 +50,7 @@ class TimerService(
         //      Rejected -> throw ResponseStatusException(CONFLICT, result.reason)
         return when (result) {
             is Applied -> {
-                apply(timer, block, result)
+                apply(timer, block, result, userId)
                 TimerStateResponse.from(timer)
             }
             is NoOp -> TimerStateResponse.from(timer)
@@ -69,14 +71,14 @@ class TimerService(
             timer.toSnapshot(), TimerIntent.CheckExpiry, clock.instant()
         )
         // 3. If Applied -> apply(timer, block, expired)
-        if (expired is Applied) apply(timer, block, expired)
+        if (expired is Applied) apply(timer, block, expired, userId)
         //    This is the lazy-expiry money shot: a GET after 3 days silently
         //    finishes the block, burns the break, and promotes the next block
         // 4. Return TimerStateResponse.from(timer)
         return TimerStateResponse.from(timer)
     }
 
-    private fun apply(timer: Timer, block: TaskBlock, result: Applied) {
+    private fun apply(timer: Timer, block: TaskBlock, result: Applied, userId: UUID) {
         val snapshot = result.snapshot
         timer.timerState = snapshot.state
         timer.endsAt = snapshot.endAt
@@ -85,6 +87,8 @@ class TimerService(
         if (result.blockHasStarted) block.status = BlockStatus.IN_PROGRESS
         if (result.blockFinished) block.status = BlockStatus.FINISHED
         if (result.advanceToNextBlock) promoteNextBlock(block)
+
+        broadcast(userId, timer)
     }
 
     private fun promoteNextBlock(finished: TaskBlock) {
@@ -110,4 +114,11 @@ class TimerService(
         workSeconds = workSeconds,
         breakSeconds = breakSeconds,
     )
+
+    private fun broadcast(userId: UUID, timer: Timer) {
+        messagingTemplate.convertAndSend(
+            "/topic/users/$userId/timer",
+            TimerStateResponse.from(timer),
+        )
+    }
 }
