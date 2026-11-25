@@ -30,24 +30,27 @@ export function useTimer(blockId: string | null) {
   }, [blockId, setTimer]);
 
   useEffect(() => {
+    setNow(Date.now());
+  }, [timer]);
+
+  useEffect(() => {
     if (!timer) void refetch();
   }, [timer, refetch]);
 
   const running = timer !== undefined && RUNNING.has(timer.state);
 
   useEffect(() => {
-    if (!running) return;
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
-  }, [running]);
+  }, []);
 
   const remaining = !timer
     ? null
-    : running && timer.endAt
+    : running
     ? Math.max(
         0,
         timer.serverRemainingSeconds -
-          Math.floor((now - timer.receivedAt) / 1000)
+          Math.max(0, Math.floor((now - timer.receivedAt) / 1000))
       )
     : timer.remainingSeconds ?? 0;
 

@@ -51,9 +51,9 @@ class TimerService(
         return when (result) {
             is Applied -> {
                 apply(timer, block, result, userId)
-                TimerStateResponse.from(timer)
+                TimerStateResponse.from(timer, clock.instant())
             }
-            is NoOp -> TimerStateResponse.from(timer)
+            is NoOp -> TimerStateResponse.from(timer, clock.instant())
             is Rejected -> throw ResponseStatusException(HttpStatus.CONFLICT, result.reason)
         }
     }
@@ -75,7 +75,7 @@ class TimerService(
         //    This is the lazy-expiry money shot: a GET after 3 days silently
         //    finishes the block, burns the break, and promotes the next block
         // 4. Return TimerStateResponse.from(timer)
-        return TimerStateResponse.from(timer)
+        return TimerStateResponse.from(timer, clock.instant())
     }
 
     private fun apply(timer: Timer, block: TaskBlock, result: Applied, userId: UUID) {
@@ -118,7 +118,7 @@ class TimerService(
     private fun broadcast(userId: UUID, timer: Timer) {
         messagingTemplate.convertAndSend(
             "/topic/users/$userId/timer",
-            TimerStateResponse.from(timer),
+            TimerStateResponse.from(timer, clock.instant()),
         )
     }
 }
