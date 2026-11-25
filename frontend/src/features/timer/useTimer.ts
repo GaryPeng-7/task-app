@@ -4,7 +4,7 @@ import { useTimerStore } from "./timerStore";
 
 const RUNNING = new Set(["WORK_RUNNING", "BREAK_RUNNING"]);
 
-function format(totalSeconds: number): string {
+export function format(totalSeconds: number): string {
   const minute = Math.floor(totalSeconds / 60);
   const second = totalSeconds % 60;
   return `${String(minute).padStart(2, "0")}: ${String(second).padStart(

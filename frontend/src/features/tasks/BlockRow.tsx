@@ -1,6 +1,7 @@
 import { Draggable } from "@hello-pangea/dnd";
 import type { Block } from "../../api/blocks";
-import TimerPane from "../timer/TimerPane";
+import { timerApi } from "../../api/timer";
+import { useTimer, format } from "../timer/useTimer";
 
 interface BlockRowProps {
   block: Block;
@@ -15,6 +16,9 @@ export default function BlockRow({
   disabled,
   onDelete,
 }: BlockRowProps) {
+  const { timer, remaining, send } = useTimer(block.id);
+  const active = !!timer && timer.state !== "IDLE" && timer.state !== "DONE";
+
   return (
     <Draggable
       draggableId={String(block.id)}
@@ -26,10 +30,25 @@ export default function BlockRow({
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className="group bg-slate-800 rounded px-3 py-2 flex items-center justify-between gap-2"
+          className={
+            "group bg-slate-800 rounded px-3 py-2 flex items-center justify-between gap-2" +
+            (active ? " ring-2 ring-emerald-400" : "")
+          }
         >
           <span>{block.subject}</span>
-          <TimerPane blockId={block.id} />
+
+          {timer?.state === "IDLE" && (
+            <button className="text-sm" onClick={() => send(timerApi.start)}>
+              Start
+            </button>
+          )}
+          {active && (
+            <span className="text-emerald-300 text-xs font-mono">
+              {timer.state.startsWith("BREAK") ? "Break" : "Work"}{" "}
+              {format(remaining ?? 0)}
+            </span>
+          )}
+
           <button
             onClick={() => onDelete(block.id)}
             className="text-red-400 hover:text-red-300 text-sm opacity-0 group-hover:opacity-100"
