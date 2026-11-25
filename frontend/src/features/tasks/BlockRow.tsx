@@ -2,6 +2,7 @@ import { Draggable } from "@hello-pangea/dnd";
 import type { Block } from "../../api/blocks";
 import { timerApi } from "../../api/timer";
 import { useTimer, format } from "../timer/useTimer";
+import { useTimerStore } from "../timer/timerStore";
 
 interface BlockRowProps {
   block: Block;
@@ -18,6 +19,12 @@ export default function BlockRow({
 }: BlockRowProps) {
   const { timer, remaining, send } = useTimer(block.id);
   const active = !!timer && timer.state !== "IDLE" && timer.state !== "DONE";
+
+  const anyOtherActive = useTimerStore((s) =>
+    Object.values(s.timers).some(
+      (t) => t.blockId !== block.id && t.state !== "IDLE" && t.state !== "DONE"
+    )
+  );
 
   return (
     <Draggable
@@ -37,7 +44,7 @@ export default function BlockRow({
         >
           <span>{block.subject}</span>
 
-          {timer?.state === "IDLE" && (
+          {timer?.state === "IDLE" && !anyOtherActive && (
             <button className="text-sm" onClick={() => send(timerApi.start)}>
               Start
             </button>
