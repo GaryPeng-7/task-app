@@ -19,14 +19,14 @@ data class TimerStateResponse(
     val blockId: UUID?
 ) {
     companion object {
-        fun from(timer: Timer) = TimerStateResponse(
+        fun from(timer: Timer, now: Instant) = TimerStateResponse(
             state = timer.timerState,
             endAt = timer.endsAt,
             remainingSeconds = timer.remainingSeconds,
             serverRemainingSeconds = when (timer.timerState) {
                 TimerState.WORK_RUNNING, TimerState.BREAK_RUNNING ->
                     timer.endsAt?.let {
-                        max(0, Duration.between(now(), it).seconds.toInt())
+                        max(0, Duration.between(now, it).seconds.toInt())
                     } ?: 0
                 TimerState.WORK_PAUSED, TimerState.BREAK_PAUSED ->
                     timer.remainingSeconds ?: 0
