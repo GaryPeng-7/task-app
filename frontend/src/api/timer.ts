@@ -12,6 +12,7 @@ export interface TimerStateResponse {
   state: TimerState;
   endAt: string | null;
   remainingSeconds: number | null;
+  serverRemainingSeconds: number;
   workSeconds: number;
   breakSeconds: number;
   blockId: string;

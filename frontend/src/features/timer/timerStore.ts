@@ -1,8 +1,11 @@
 import { create } from "zustand";
 import type { TimerStateResponse } from "../../api/timer";
 
+// What the server sent + when it arrived (client clock, for countdown anchoring)
+export type StoredTimer = TimerStateResponse & { receivedAt: number };
+
 interface TimerStore {
-  timers: Record<string, TimerStateResponse>;
+  timers: Record<string, StoredTimer>; // ← was Record<string, TimerStateResponse>
   setTimer: (t: TimerStateResponse) => void;
 }
 

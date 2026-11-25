@@ -14,7 +14,7 @@ export function format(totalSeconds: number): string {
 }
 
 export function useTimer(blockId: string | null) {
-  const timer = useTimerStore((s) => s.timers[blockId]);
+  const timer = useTimerStore((s) => (blockId ? s.timers[blockId] : undefined));
   const setTimer = useTimerStore((s) => s.setTimer);
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -44,7 +44,11 @@ export function useTimer(blockId: string | null) {
   const remaining = !timer
     ? null
     : running && timer.endAt
-    ? Math.max(0, Math.floor((Date.parse(timer.endAt) - now) / 1000))
+    ? Math.max(
+        0,
+        timer.serverRemainingSeconds -
+          Math.floor((now - timer.receivedAt) / 1000)
+      )
     : timer.remainingSeconds ?? 0;
 
   useEffect(() => {
