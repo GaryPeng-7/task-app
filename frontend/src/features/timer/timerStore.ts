@@ -8,5 +8,8 @@ interface TimerStore {
 
 export const useTimerStore = create<TimerStore>((set) => ({
   timers: {},
-  setTimer: (t) => set((s) => ({ timers: { ...s.timers, [t.blockId]: t } })),
+  setTimer: (t) =>
+    set((s) => ({
+      timers: { ...s.timers, [t.blockId]: { ...t, receivedAt: Date.now() } },
+    })),
 }));
