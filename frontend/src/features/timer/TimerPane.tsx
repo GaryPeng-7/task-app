@@ -1,122 +1,72 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { timerApi, type TimerStateResponse } from "../../api/timer";
+import { useEffect, useState } from "react";
+import { getBlocks, type Block } from "../../api/blocks";
+import { timerApi } from "../../api/timer";
 import { useTimerStore } from "./timerStore";
+import { useTimer, format } from "./useTimer";
+import { todayLocal } from "../tasks/dateUtils";
 
-const RUNNING = new Set(["WORK_RUNNING", "BREAK_RUNNING"]);
-
-function format(totalSeconds: number): string {
-  const minute = Math.floor(totalSeconds / 60);
-  const second = totalSeconds % 60;
-  return `${String(minute).padStart(2, "0")}: ${String(second).padStart(
-    2,
-    "0"
-  )}`;
-}
-
-export default function TimerPane({ blockId }: { blockId: string }) {
-  const timer = useTimerStore((s) => s.timers[blockId]);
-  const setTimer = useTimerStore((s) => s.setTimer);
-  const [error, setError] = useState<string | null>(null);
-  const [now, setNow] = useState(() => Date.now());
-  const expiryRequested = useRef(false);
-
-  const refetch = useCallback(async () => {
-    try {
-      setTimer(await timerApi.getState(blockId));
-      setError(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Timer fetch failed");
-    }
-  }, [blockId, setTimer]);
+export default function TimerPane() {
+  const timers = useTimerStore((s) => s.timers);
+  const [blocks, setBlocks] = useState<Block[]>([]);
 
   useEffect(() => {
-    if (!timer) void refetch();
-  }, [timer, refetch]);
+    getBlocks(todayLocal())
+      .then(setBlocks)
+      .catch(() => {});
+  }, []);
 
-  const running = timer !== undefined && RUNNING.has(timer.state);
+  const active =
+    Object.values(timers).find(
+      (t) => t.state !== "IDLE" && t.state !== "DONE"
+    ) ?? null;
 
-  useEffect(() => {
-    if (!running) return;
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, [running]);
+  const { timer, remaining, send, error } = useTimer(active?.blockId ?? null);
 
-  const remaining = !timer
-    ? null
-    : running && timer.endAt
-    ? Math.max(0, Math.floor((Date.parse(timer.endAt) - now) / 1000))
-    : timer.remainingSeconds ?? 0;
+  const subject = blocks.find((b) => b.id === active?.blockId)?.subject ?? "";
 
-  useEffect(() => {
-    expiryRequested.current = false;
-  }, [timer?.state, timer?.endAt]);
-
-  useEffect(() => {
-    if (running && remaining === 0 && !expiryRequested.current) {
-      expiryRequested.current = true;
-      void refetch();
-    }
-  }, [running, remaining, refetch]);
-
-  useEffect(() => {
-    const onVisible = () => {
-      if (document.visibilityState === "visible") void refetch();
-    };
-    document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
-  }, [refetch]);
-
-  async function send(intent: (id: string) => Promise<TimerStateResponse>) {
-    try {
-      setTimer(await intent(blockId));
-      setError(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Action failed");
-    }
+  if (!active || !timer) {
+    return (
+      <div className="h-full flex items-center justify-center text-slate-500">
+        No active time - press Start on a block.
+      </div>
+    );
   }
-
-  if (!timer) return <span className="text-slate-500 text-xs">...</span>;
-  if (timer.state === "DONE") return null;
 
   const phase = timer.state.startsWith("BREAK") ? "Break" : "Work";
 
   return (
-    <span className="flex items-center gap-2 text-sm">
-      {timer.state !== "IDLE" && (
-        <span className="font-mono">
-          {phase} {format(remaining ?? 0)}
-        </span>
-      )}
+    <div className="h-full flex flex-col items-center justify-center gap-6">
+      <div className="text-slate-400 text-lg">{subject}</div>
+      <div className="text-slate-500">{phase}</div>
+      <div className="font-mono text-8xl">{format(remaining ?? 0)}</div>
+      <div className="flex gap-3">
+        {timer.state === "WORK_RUNNING" && (
+          <>
+            <button onClick={() => send(timerApi.pause)}>Pause</button>
+            <button onClick={() => send(timerApi.complete)}>Complete</button>
+          </>
+        )}
+        {timer.state === "WORK_PAUSED" && (
+          <>
+            <button onClick={() => send(timerApi.resume)}>Resume</button>
+            <button onClick={() => send(timerApi.complete)}>Complete</button>
+          </>
+        )}
+        {timer.state === "BREAK_RUNNING" && (
+          <>
+            <button onClick={() => send(timerApi.pause)}>Pause</button>
+            <button onClick={() => send(timerApi.skipBreak)}>Skip break</button>
+          </>
+        )}
+        {timer.state === "BREAK_PAUSED" && (
+          <>
+            <button onClick={() => send(timerApi.resume)}>Resume</button>
+            <button onClick={() => send(timerApi.skipBreak)}>Skip break</button>
+          </>
+        )}
+      </div>
 
-      {timer.state === "IDLE" && (
-        <button onClick={() => send(timerApi.start)}>Sttart</button>
-      )}
-      {timer.state === "WORK_RUNNING" && (
-        <>
-          <button onClick={() => send(timerApi.pause)}>Pause</button>
-          <button onClick={() => send(timerApi.complete)}>Complete</button>
-        </>
-      )}
-      {timer.state === "WORK_PAUSED" && (
-        <>
-          <button onClick={() => send(timerApi.resume)}>Resume</button>
-          <button onClick={() => send(timerApi.complete)}>Complete</button>
-        </>
-      )}
-      {timer.state === "BREAK_RUNNING" && (
-        <>
-          <button onClick={() => send(timerApi.pause)}>Pause</button>
-          <button onClick={() => send(timerApi.skipBreak)}>Skip break</button>
-        </>
-      )}
-      {timer.state === "BREAK_PAUSED" && (
-        <>
-          <button onClick={() => send(timerApi.resume)}>Resume</button>
-          <button onClick={() => send(timerApi.skipBreak)}>Skip break</button>
-        </>
-      )}
-
-      {error && <span className="text-red-400 text-xs">{error}</span>}
-    </span>
+      {error && <div className="text-red-400 text-sm">{error}</div>}
+    </div>
   );
 }
