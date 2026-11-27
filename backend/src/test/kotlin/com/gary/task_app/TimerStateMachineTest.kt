@@ -31,12 +31,18 @@ class TimerStateMachineTest {
 
     @Test
     fun `pause while paused is a no-op`() {
-        val result = TimerStateMachine.transition(TimerSnapshot(TimerState.WORK_PAUSED),
-            TimerIntent.Pause, t0)
-
-        assertEquals(
-            NoOp(TimerSnapshot(TimerState.WORK_PAUSED)), result
+        val paused = TimerSnapshot(
+            state = TimerState.WORK_PAUSED,
+            remainingSeconds = 900,
         )
+
+        val result = TimerStateMachine.transition(
+            paused,
+            TimerIntent.Pause,
+            t0,
+        )
+
+        assertEquals(NoOp(paused), result)
     }
 
     @Test
