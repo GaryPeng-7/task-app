@@ -7,6 +7,7 @@ import {
   deleteBlcok as deleteBlcokApi,
 } from "../../api/blocks";
 import type { DropResult } from "@hello-pangea/dnd";
+import { useTimerStore } from "../timer/timerStore";
 
 export function useBlocks(date: string) {
   const [blocks, setBlocks] = useState<Block[] | null>(null);
@@ -14,6 +15,8 @@ export function useBlocks(date: string) {
   const [reorderError, setReorderError] = useState<string | null>(null);
   const [reordering, setReordering] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const removeTimer = useTimerStore((state) => state.removeTimer);
 
   const refetch = useCallback(() => {
     setBlocks(null);
@@ -60,11 +63,16 @@ export function useBlocks(date: string) {
 
   async function deleteBlcok(id: string) {
     if (!blocks) return;
+
     const snapshot = blocks;
+
     setBlocks(blocks.filter((b) => b.id !== id));
     setDeleteError(null);
+
     try {
       await deleteBlcokApi(id);
+
+      removeTimer(id);
     } catch (e) {
       setBlocks(snapshot);
       setDeleteError((e as Error).message);

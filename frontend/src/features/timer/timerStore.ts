@@ -7,6 +7,7 @@ export type StoredTimer = TimerStateResponse & { receivedAt: number };
 interface TimerStore {
   timers: Record<string, StoredTimer>; // ← was Record<string, TimerStateResponse>
   setTimer: (t: TimerStateResponse) => void;
+  removeTimer: (blockId: string) => void;
 }
 
 export const useTimerStore = create<TimerStore>((set) => ({
@@ -15,4 +16,12 @@ export const useTimerStore = create<TimerStore>((set) => ({
     set((s) => ({
       timers: { ...s.timers, [t.blockId]: { ...t, receivedAt: Date.now() } },
     })),
+
+  removeTimer: (blockId) =>
+    set((state) => {
+      const remainingTimers = { ...state.timers };
+      delete remainingTimers[blockId];
+
+      return { timers: remainingTimers };
+    }),
 }));

@@ -26,6 +26,15 @@ export default function BlockRow({
     )
   );
 
+  const isFinished =
+    block.status === "FINISHED" ||
+    timer?.state === "BREAK_RUNNING" ||
+    timer?.state === "BREAK_PAUSED" ||
+    timer?.state === "DONE";
+
+  const isTimerActive =
+    timer != null && timer.state !== "IDLE" && timer.state !== "DONE";
+
   return (
     <Draggable
       draggableId={String(block.id)}
@@ -38,8 +47,12 @@ export default function BlockRow({
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           className={
-            "group bg-slate-800 rounded px-3 py-2 flex items-center justify-between gap-2" +
-            (active ? " ring-2 ring-emerald-400" : "")
+            "group rounded px-3 py-2 flex items-center justify-between gap-2 transition-colors " +
+            (isFinished
+              ? "bg-purple-900/40 ring-2 ring-purple-400"
+              : isTimerActive
+              ? "bg-slate-800 ring-2 ring-emerald-400"
+              : "bg-slate-800")
           }
         >
           <span>{block.subject}</span>
