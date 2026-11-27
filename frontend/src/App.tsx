@@ -5,11 +5,14 @@ import RegisterPage from "./features/auth/RegisterPage";
 import TasksPane from "./features/tasks/TasksPane";
 import TimerPane from "./features/timer/TimerPane";
 import ChatPane from "./features/chat/ChatPane";
+import { useTimerSocket } from "./features/timer/useTimerSocket";
 
 export default function App() {
   const token = useAuthStore((s) => s.token);
   const logout = useAuthStore((s) => s.logout);
   const [showRegister, setShowRegister] = useState(false);
+
+  useTimerSocket();
 
   if (!token) {
     return showRegister ? (

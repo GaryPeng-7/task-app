@@ -21,6 +21,8 @@ export function useTimer(blockId: string | null) {
   const expiryRequested = useRef(false);
 
   const refetch = useCallback(async () => {
+    if (!blockId) return;
+
     try {
       setTimer(await timerApi.getState(blockId));
       setError(null);

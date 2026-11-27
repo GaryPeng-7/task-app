@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useBlocks } from "./useBlocks";
 import { todayLocal } from "./dateUtils";
 import BlockRow from "./BlockRow";
-import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 
 export default function TasksPane() {
   const {
